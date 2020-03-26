@@ -1,4 +1,4 @@
-package net.jmb.module.security.configuration;
+package net.jmb.module.security.config;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -17,7 +17,7 @@ import net.jmb.oidc_demo.model.IdentityProviderRegistration;
 @org.springframework.cache.annotation.CacheConfig(cacheNames = CacheConfig.IDP_INFOS_CACHE)
 public class UserLoginService {
 	
-
+	@Autowired	protected String securityBaseURL;
 	@Autowired 	protected UserLoginService self;	
 	@Autowired 	protected IdentityProviderService identityProviderService;	
 	@Autowired 	protected TokenService tokenService;
@@ -32,11 +32,15 @@ public class UserLoginService {
 	public Object idpLoginUrl(String idp) throws IOException {
 		Map<String, IdentityProviderRegistration> infos = self.loginInfos();
 		IdentityProviderRegistration idpInfos = infos.get(idp);
-		String url = idpInfos.getAuthorizationURL();
+		String url = securityBaseURL + idpInfos.getAuthorizationPath();
 		return url;
 	}
 
 	public UserDetails register(String accessToken) throws IOException {
+		
+		/** 
+		 * TODO vérifier la validité du jeton auprès du serveur d'authentification
+		 */
 			
 		OidcUserDetails user = tokenService.buildOidcUserDetails(accessToken);
 		user.setPassword(passwordEncoder.encode(user.getPassword()));

@@ -21,6 +21,10 @@ import net.jmb.module.security.model.OidcUserDetails;
 @Service
 public class OidcUserDetailsService implements UserDetailsManager {
 	
+	/**
+	 * TODO mettre en place une infrastructure de log
+	 */
+	
 		protected final Log logger = LogFactory.getLog(getClass());
 		protected final Map<String, OidcUserDetails> users = new HashMap<>();
 		private AuthenticationManager authenticationManager;
@@ -79,9 +83,11 @@ public class OidcUserDetailsService implements UserDetailsManager {
 			
 			OidcUserDetails user = users.get(username.toLowerCase());
 			if (user == null) {
-				
 				throw new UsernameNotFoundException(username);
 			}
+			/**
+			 * TODO restituer un DTO en filtrant les données pertinentes plutôt que le user complet
+			 */
 			return user;
 		}
 

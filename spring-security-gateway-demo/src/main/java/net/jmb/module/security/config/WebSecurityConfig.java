@@ -26,15 +26,7 @@ import net.jmb.module.security.filter.DaoTokenAuthenticationFilter;
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-
-	public static final long EXPIRATION_DELAY_SECONDS_TOLERANCE = 3600;
-	
-	public static final String[] PERMIT_ALL_REQUEST_MATCHER = new String[] {
-		"/users/signin", "/users/login/*", "/users/signup", "/h2-console/**/**",
-		"/v2/api-docs", "/swagger-resources/**", "/swagger-ui.html", 
-		"/configuration/**", "/webjars/**", "/public", "/error"
-	};
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements SecurityConstants {
 	
 	@Autowired 
 	UserDetailsManager oidcUserDetailsService ;

@@ -39,29 +39,52 @@ public class UserLoginController {
 	
 	@RequestMapping(path = "/login/{idp}", method = { RequestMethod.GET, RequestMethod.POST })
 	@ApiOperation(value = "${UserLoginController.loginIDP}")
-	public void loginIdp(
-			HttpServletRequest request,	HttpServletResponse response,
-			@PathVariable 	String idp, 
-			@RequestParam(value = "redirect_to", required = false) String redirectTo
-	) throws IOException {
+	
+	public void loginIdp(HttpServletRequest request, HttpServletResponse response,
+			@PathVariable String idp) throws IOException {
+		
 		String url = (String) userLoginService.idpLoginUrl(idp);		
 		String redirect = ServletUriComponentsBuilder.fromContextPath(request).build().toUriString();
 		redirect = redirect != null ? "?redirect_to=" + redirect + "/users/login/accessToken" : "";
 		String authLocation = response.encodeRedirectURL(url + redirect);
-		response.sendRedirect(authLocation);
-		
+		response.sendRedirect(authLocation);		
 	}
+	
+	@RequestMapping(path = "/login/refresh/{idp}", method = { RequestMethod.GET, RequestMethod.POST })
+	@ApiOperation(value = "${UserLoginController.refreshToken}")
+	
+	public void refreshTokenIdp(HttpServletRequest request,	HttpServletResponse response, 
+			@PathVariable String idp)  {
+		/**
+		 * TODO créer un service de raffraichissement des jetons
+		 * On l'appellera en cas de jeton expiré pour un user ou à la demande
+		 */
+	}
+	
+	@RequestMapping(path = "/logout", method = { RequestMethod.GET, RequestMethod.POST })
+	@ApiOperation(value = "${UserLoginController.logout}")
+	
+	public void logout(HttpServletRequest request,	HttpServletResponse response)  {
+		/**
+		 * TODO créer un service de logout
+		 */
+	}
+	
 	
 	@GetMapping(path = "/login/accessToken")
 	@ApiOperation(value = "${UserLoginController.login.accessToken}")
+	
 	public Object accessToken(HttpServletRequest request) throws IOException {
+		
 		String accessToken = request.getParameter("access_token");		
 		return userLoginService.register(accessToken);
 	}
 	
 	@GetMapping(path = "/{name}")
 	@ApiOperation(value = "${UserLoginController.users.getUser}")
-	public UserDetails getUser(@PathVariable("name") String name) {		
+	
+	public UserDetails getUser(@PathVariable("name") String name) {	
+		
 		return oidcUserDetailsService.loadUserByUsername(name);
 	}
 

@@ -5,19 +5,6 @@
 
 # Structure 
 
-Ajout d'une ligne dans branche test
-
-J'ai rajouté une ligne ici
-
-[origin/test2] Ajout d'une ligne README
-
-[origin/test2] Encore une nouvelle ligne avec nouveau commit dans README
-
-[origin/test] ajout d'une ligne entête README
-
-[origin/test] encore 1 ligne entête README + commit
-
-[origin/test] et une 2ème ligne README + nouveau commit
 
 
 ```

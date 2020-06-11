@@ -17,7 +17,7 @@ import net.jmb.module.security.model.OidcUserDetails;
 import net.jmb.module.security.model.Role;
 import net.jmb.module.security.model.mapper.RoleMapperFactory;
 import net.jmb.module.security.model.mapper.RoleMapperInterface;
-import net.jmb.oidc_demo.model.IdentityProviderRegistration;
+import net.jmb.oidc.model.IdentityProviderRegistration;
 
 @Service
 @org.springframework.cache.annotation.CacheConfig(cacheNames = CacheConfig.IDP_INFOS_CACHE)

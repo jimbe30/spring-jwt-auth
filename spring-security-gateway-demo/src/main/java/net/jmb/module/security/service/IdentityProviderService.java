@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import net.jmb.module.security.config.CacheConfig;
-import net.jmb.oidc_demo.model.IdentityProviderRegistration;
+import net.jmb.oidc.model.IdentityProviderRegistration;
 
 @Service
 @org.springframework.cache.annotation.CacheConfig(cacheNames = CacheConfig.IDP_INFOS_CACHE)

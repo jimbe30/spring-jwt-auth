@@ -22,7 +22,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import net.jmb.module.security.service.UserLoginService;
-import net.jmb.oidc_demo.model.IdentityProviderRegistration;
+import net.jmb.oidc.model.IdentityProviderRegistration;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import io.jsonwebtoken.JwtException;
 import net.jmb.module.security.config.CacheConfig;
 import net.jmb.module.security.model.OidcUserDetails;
-import net.jmb.oidc_demo.model.IdentityProviderRegistration;
+import net.jmb.oidc.model.IdentityProviderRegistration;
 
 @Service
 @org.springframework.cache.annotation.CacheConfig(cacheNames = CacheConfig.IDP_INFOS_CACHE)

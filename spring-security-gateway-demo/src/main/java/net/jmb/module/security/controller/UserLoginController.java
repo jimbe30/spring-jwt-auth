@@ -1,11 +1,14 @@
 package net.jmb.module.security.controller;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +22,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import net.jmb.module.security.service.UserLoginService;
+import net.jmb.oidc_demo.model.IdentityProviderRegistration;
+import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
 @RequestMapping("/users")
@@ -31,17 +36,29 @@ public class UserLoginController {
 	@Autowired
 	private UserDetailsManager oidcUserDetailsService;
 	
+	
 	@GetMapping(path = "/login/infos")
 	@ApiOperation(value = "${UserLoginController.loginInfos}")
+	
 	public Object loginInfos() throws IOException {
-		return userLoginService.loginInfos();
+		Map<String, IdentityProviderRegistration> loginInfos = userLoginService.loginInfos();
+		Map<String, Object> result = new HashMap<>();
+		loginInfos.forEach((id, idp) -> {
+			Map<String, String> data = new HashMap<>();
+			data.put("description", idp.getDescription());
+			data.put("authorizationPath", "/users/login/" + id);
+			result.put(id, data);
+		});
+		return result;
 	}
 	
-	@RequestMapping(path = "/login/{idp}", method = { RequestMethod.GET, RequestMethod.POST })
+	@RequestMapping(path = "/login/{idp}", method = { RequestMethod.GET })
 	@ApiOperation(value = "${UserLoginController.loginIDP}")
 	
-	public void loginIdp(HttpServletRequest request, HttpServletResponse response,
-			@PathVariable String idp) throws IOException {
+	public void loginIdp(
+			HttpServletRequest request, HttpServletResponse response,
+			@PathVariable String idp
+		) throws IOException {
 		
 		String url = (String) userLoginService.idpLoginUrl(idp);		
 		String redirect = ServletUriComponentsBuilder.fromContextPath(request).build().toUriString();
@@ -50,18 +67,7 @@ public class UserLoginController {
 		response.sendRedirect(authLocation);		
 	}
 	
-	@RequestMapping(path = "/login/refresh/{idp}", method = { RequestMethod.GET, RequestMethod.POST })
-	@ApiOperation(value = "${UserLoginController.refreshToken}")
-	
-	public void refreshTokenIdp(HttpServletRequest request,	HttpServletResponse response, 
-			@PathVariable String idp)  {
-		/**
-		 * TODO créer un service de raffraichissement des jetons
-		 * On l'appellera en cas de jeton expiré pour un user ou à la demande
-		 */
-	}
-	
-	@RequestMapping(path = "/logout", method = { RequestMethod.GET, RequestMethod.POST })
+	@RequestMapping(path = "/logout", method = { RequestMethod.GET })
 	@ApiOperation(value = "${UserLoginController.logout}")
 	
 	public void logout(HttpServletRequest request,	HttpServletResponse response)  {
@@ -72,20 +78,29 @@ public class UserLoginController {
 	
 	
 	@GetMapping(path = "/login/accessToken")
-	@ApiOperation(value = "${UserLoginController.login.accessToken}")
+	@ApiIgnore
 	
-	public Object accessToken(HttpServletRequest request) throws IOException {
+	public Object accessToken(
+			@RequestParam("id_token") String idToken
+		) throws IOException {
 		
-		String accessToken = request.getParameter("access_token");		
-		return userLoginService.register(accessToken);
+		UserDetails user = userLoginService.register(idToken);
+		Map<String, Object> data = new HashMap<>();
+		data.put("id_token", idToken);
+		data.put("user", user);
+		return data;
 	}
 	
-	@GetMapping(path = "/{name}")
+	@GetMapping(path = "/{id}")
 	@ApiOperation(value = "${UserLoginController.users.getUser}")
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	
-	public UserDetails getUser(@PathVariable("name") String name) {	
-		
-		return oidcUserDetailsService.loadUserByUsername(name);
+	public UserDetails getUser(
+			@PathVariable(required = false) String id,
+			@RequestParam(name = "name", required = false) String name
+		) {	
+		String zeName = name != null ? name : id;
+		return oidcUserDetailsService.loadUserByUsername(zeName);
 	}
 
 

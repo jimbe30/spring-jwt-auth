@@ -21,6 +21,7 @@ public class IdentityProviderService {
 	@Autowired 	IdentityProviderService self;	
 	@Autowired	private ModelMapper modelMapper;	
 	@Autowired	private String securityBaseURL;
+	private String redirectParameter;
 	
 	@SuppressWarnings("unchecked")	
 	@Cacheable(key = CacheConfig.CACHE_SCOPE)
@@ -29,12 +30,17 @@ public class IdentityProviderService {
 		Map<String, IdentityProviderRegistration> result = new HashMap<>();		
 		RestTemplate restTemplate = new RestTemplate();		
 		
-		Map<String, ?> tmpResult = restTemplate.getForObject(securityBaseURL + "/login/discovery", Map.class);
+		Map<String, ?> tmpResult = restTemplate.getForObject(securityBaseURL + "/login/infos", Map.class);
 		
-		tmpResult.forEach( (providerId, data) -> {
-			IdentityProviderRegistration registration = modelMapper.map(data, IdentityProviderRegistration.class);
-			result.put(providerId, registration);
-		});
+		redirectParameter = (String) tmpResult.get("redirectParameter"); 
+		tmpResult = (Map<String, IdentityProviderRegistration>) tmpResult.get("loginInfos");		
+		
+		tmpResult.forEach(		
+			(providerId, data) -> {
+				IdentityProviderRegistration registration = modelMapper.map(data, IdentityProviderRegistration.class);
+				result.put(providerId, registration);
+			}
+		);
 
 		return result;
 	}
@@ -45,9 +51,13 @@ public class IdentityProviderService {
 		return self.findIdentityProviders()
 				.values()
 				.stream()
-				.filter(idpRegistration -> idpRegistration.getIssuerURL().contains(issuer))
+				.filter(idpRegistration -> issuer.contains(idpRegistration.getIssuer()))
 				.findFirst()
 				.get();
+	}
+
+	public String getRedirectParameter() {
+		return redirectParameter;
 	}
 
 }

@@ -11,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
@@ -47,24 +48,23 @@ public class DaoTokenAuthenticationFilter extends AbstractAuthenticationProcessi
 			bearerToken = bearerToken.substring(7);
 			OidcUserDetails user = null;
 			try {
-				user = tokenService.buildOidcUserDetails(bearerToken);
+				user = tokenService.buildOidcUserDetails(bearerToken, false);
 			} catch (JwtException e) {
 				throw new InvalidOidcTokenException(e.getMessage());
 			}
 			if (user != null) {
 				UsernamePasswordAuthenticationToken authRequest = 
 						new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword());
-				try {
-					Authentication authentication = this.getAuthenticationManager().authenticate(authRequest);
-					if (authentication != null && authentication.isAuthenticated()) {						
-						return authentication;
-					}
-				} catch (AuthenticationException e) {
-					e.printStackTrace();
+
+				Authentication authentication = this.getAuthenticationManager().authenticate(authRequest);
+				if (authentication != null && authentication.isAuthenticated()) {						
+					return authentication;
 				}
+			} else {
+				throw new UsernameNotFoundException("Impossible d'identifier l'utilisateur à partir du header Authorization");
 			}
 		}
-		return null;		
+		return null;
 	}
 
 	

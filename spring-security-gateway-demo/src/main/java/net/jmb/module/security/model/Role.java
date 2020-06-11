@@ -3,7 +3,7 @@ package net.jmb.module.security.model;
 import org.springframework.security.core.GrantedAuthority;
 
 public enum Role implements GrantedAuthority {
-	ADMIN, CLIENT, USER, ANONYMOUS, MEDECIN, ETABLISSEMENT;
+	ADMIN, CLIENT, USER, ANONYMOUS, MEDECIN, ETABLISSEMENT, PATIENT;
 
 	public String getAuthority() {
 		return "ROLE_" + name();

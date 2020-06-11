@@ -3,6 +3,7 @@ package net.jmb.module.security.model;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -10,26 +11,27 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class OidcUserDetails extends OidcIdToken implements UserDetails {	
 
 	private static final long serialVersionUID = 1L;
-
-	private String id;
+	
 	private String username;
 	private String password;
-	private List<Role> roles;	
+	private List<Role> roles;
+	private long lastAccessTime;
+	private long sessionExpirationDelay;
 	
 	public OidcUserDetails(String tokenValue, Instant issuedAt, Instant expiresAt, Map<String, Object> claims) {
 		super(tokenValue, issuedAt, expiresAt, claims);
-	}
-
-	public String getId() {
-		return id;
+		updateLastAccessTime();
 	}
 	
-	public OidcUserDetails setId(String id) {
-		this.id = id;
-		return this;
+	@Override
+	@JsonIgnore
+	public Map<String, Object> getClaims() {
+		return super.getClaims();
 	}
 
 	@Override
@@ -38,6 +40,7 @@ public class OidcUserDetails extends OidcIdToken implements UserDetails {
 	}
 
 	@Override
+	@JsonIgnore
 	public String getPassword() {
 		return password;
 	}
@@ -45,26 +48,6 @@ public class OidcUserDetails extends OidcIdToken implements UserDetails {
 	@Override
 	public String getUsername() {
 		return username;
-	}
-
-	@Override
-	public boolean isAccountNonExpired() {
-		return true;
-	}
-
-	@Override
-	public boolean isAccountNonLocked() {
-		return true;
-	}
-
-	@Override
-	public boolean isCredentialsNonExpired() {
-		return true;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return true;
 	}
 
 	public List<Role> getRoles() {
@@ -89,6 +72,47 @@ public class OidcUserDetails extends OidcIdToken implements UserDetails {
 	public OidcUserDetails setPassword(String password) {
 		this.password = password;
 		return this;
+	}
+	
+	@Override
+	public boolean isAccountNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isAccountNonLocked() {
+		return true;
+	}
+
+	@Override
+	public boolean isCredentialsNonExpired() {
+		long expirationTime = getExpiresAt().toEpochMilli();
+		long now = new Date().getTime();
+		if (now > expirationTime && now > lastAccessTime + sessionExpirationDelay) {
+			return false;
+		}	
+		return true;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return true;
+	}
+
+	public long getLastAccessTime() {
+		return lastAccessTime;
+	}
+
+	public void updateLastAccessTime() {
+		this.lastAccessTime = new Date().getTime();
+	}
+
+	public long getSessionExpirationDelay() {
+		return sessionExpirationDelay;
+	}
+
+	public void setSessionExpirationDelay(long sessionExpirationDelay) {
+		this.sessionExpirationDelay = sessionExpirationDelay;
 	}
 
 }

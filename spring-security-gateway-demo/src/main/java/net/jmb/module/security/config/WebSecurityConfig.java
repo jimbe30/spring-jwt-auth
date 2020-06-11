@@ -26,14 +26,50 @@ import net.jmb.module.security.filter.DaoTokenAuthenticationFilter;
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements SecurityConstants {
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+	
+	static String[] PERMIT_ALL_REQUEST_MATCHER = new String[] {
+		"/users/login/**", "/public/**", "/tests/public/**", "/error/**", 
+		"/h2-console/**/**", "/v2/api-docs", "/swagger-resources/**", "/swagger-ui.html", 
+		"/configuration/**", "/webjars/**"
+	};
 	
 	@Autowired 
 	UserDetailsManager oidcUserDetailsService ;
 	
+	@Value(value = "${net.jmb.security.matchers.permitAll}") 
+	String permitAllMatcher;
+	
 	@Bean
-	public String securityBaseURL(@Value("${net.jmb.security.baseUrl}") String securityBaseURL) {
+	public String securityBaseURL(
+			@Value("${net.jmb.security.baseUrl}") String securityBaseURL) {
 		return securityBaseURL;
+	}
+	
+	@Bean
+	public Integer expirationSessionDelay(
+			@Value("${net.jmb.security.expiration.session.delay:15}") Integer expirationSessionDelay)  {
+		return expirationSessionDelay;
+	}
+	
+	@Bean
+	public Integer expirationJwtTolerance(
+			@Value("${net.jmb.security.expiration.jwt.tolerance:60}") Integer expirationJwtTolerance)  {
+		return expirationJwtTolerance;
+	}
+	
+	@Bean
+	public String[] permitAllRequestMatcher() {		
+		String[] result = PERMIT_ALL_REQUEST_MATCHER;		
+		if (permitAllMatcher != null) {
+			String[] matchers = permitAllMatcher.split(",[ ]*");
+			result = new String[PERMIT_ALL_REQUEST_MATCHER.length + matchers.length];
+			Arrays.setAll(result, i ->
+				i < PERMIT_ALL_REQUEST_MATCHER.length ? 
+					PERMIT_ALL_REQUEST_MATCHER[i]
+					: matchers[i - PERMIT_ALL_REQUEST_MATCHER.length]);
+		}		
+		return result;
 	}
 	
 	@Override
@@ -48,21 +84,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements S
 			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				.and()
 			.authorizeRequests()
-				.antMatchers(PERMIT_ALL_REQUEST_MATCHER).permitAll()
+				.antMatchers(permitAllRequestMatcher()).permitAll()
 				.anyRequest().authenticated()
 				.and()
-			.exceptionHandling()
-				.accessDeniedPage("/users/login")
-				.and()
-			.addFilterBefore(daoTokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-//			.addFilterAfter(new CustomAuthFilter(customAuthProvider), DaoTokenAuthenticationFilter.class)
-			;
+			.addFilterBefore(daoTokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 	}
 	
 	@Bean
 	DaoTokenAuthenticationFilter daoTokenAuthenticationFilter() throws Exception {
 		RequestMatcher daoTokenRequestMatcher = request -> {
-			boolean authorized = Arrays.stream(PERMIT_ALL_REQUEST_MATCHER)
+			boolean authorized = Arrays.stream(permitAllRequestMatcher())
 				.anyMatch(pattern -> 
 					new AntPathRequestMatcher(pattern).matches(request)
 				);				
@@ -82,7 +113,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements S
 	@Override
 	public void configure(WebSecurity web) throws Exception {
 		// Allow resources to be accessed without authentication
-		web.ignoring().antMatchers(PERMIT_ALL_REQUEST_MATCHER);
+		web.ignoring().antMatchers(permitAllRequestMatcher());
 	}
 
 	@Bean

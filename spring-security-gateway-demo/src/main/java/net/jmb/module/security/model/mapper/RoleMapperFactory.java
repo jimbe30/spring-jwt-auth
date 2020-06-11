@@ -1,12 +1,12 @@
 package net.jmb.module.security.model.mapper;
 
-import net.jmb.module.security.model.IdentityProvider;
+import net.jmb.module.security.model.IdentityProviders;
 
 public class RoleMapperFactory {
 	
 	public RoleMapperInterface get(String providerId)  {
 		
-		IdentityProvider idp = IdentityProvider.get(providerId);
+		IdentityProviders idp = IdentityProviders.get(providerId);
 		if (idp != null) {
 			switch (idp) {
 			case GOOGLE:

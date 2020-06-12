@@ -5,12 +5,12 @@ login:
         cache: TRACE
 
 server:
-   port: 8090
+   port: 6969
 
 net:
   jmb:
     security:
-      baseUrl: http://localhost:6969
+      baseUrl: http://localhost:8090
       matchers:
         permitAll: /clientApp/**
 

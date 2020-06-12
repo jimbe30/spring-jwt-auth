@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>net.jmb.security</groupId>
-	<artifactId>jwt-auth-service</artifactId>
+	<artifactId>spring-jwt-auth</artifactId>
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
@@ -87,10 +87,15 @@
 	</dependencies>
 
 	<build>
+
+		<finalName>spring-jwt-auth</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<classifier>service</classifier>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

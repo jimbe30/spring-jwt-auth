@@ -1,0 +1,1 @@
+java -Dserver.port=6969 -jar C:\dev_demo\git_repositories\spring-jwt-auth\target\spring-jwt-auth-service.jar

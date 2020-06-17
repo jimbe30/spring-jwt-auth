@@ -85,6 +85,7 @@ public class OidcUserDetailsService implements UserDetailsManager, Runnable {
 	public void run() {
 		while (true) {
 			try {
+				System.out.println("Thread de nettoyage, fréquence " + expirationSessionDelay + " min");
 				Thread.sleep(expirationSessionDelay * 60 * 1000);
 			} catch (InterruptedException e) {
 				new Thread(this).start();

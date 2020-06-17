@@ -1,12 +1,24 @@
 package net.jmb.module.security.service;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Header;
@@ -25,6 +37,13 @@ public class TokenService {
 	
 	@Autowired
 	Integer expirationJwtTolerance;
+	@Autowired	
+	String securityBaseURL;
+	@Autowired
+	UserDetailsManager oidcUserDetailsService;
+	@Autowired
+	PasswordEncoder passwordEncoder;
+	
 	
 	@Autowired	private IdentityProviderService identityProviderService;
 	@Autowired	private RoleMapperFactory roleMapperFactory;
@@ -101,6 +120,44 @@ public class TokenService {
 		}
 		return result;
 	}	
+	
+	public ResponseEntity<Object> validateToken(String accessToken) throws IOException, URISyntaxException {
+		
+		RequestEntity<Void> request = RequestEntity.get(new URI(securityBaseURL + "/token/validate?id_token=" + accessToken)).build();
+		RestTemplate restTemplate = new RestTemplate();
+		ResponseEntity<Object> response = restTemplate.exchange(request, Object.class);
+		
+		if (Arrays.asList(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN).contains(response.getStatusCode())) {
+			throw new BadCredentialsException("Accès non autorisé : le jeton est invalide") ;
+		}
+		
+		return response;
+	}
+	
+	public UserDetails registerUser(String accessToken) throws IOException {
+
+		ResponseEntity<Object> tokenDetails = null;
+		try {
+			tokenDetails = validateToken(accessToken);			
+		} catch (IOException | URISyntaxException e1) {
+			throw new JwtException(e1.getMessage());
+		}
+		
+		if (tokenDetails == null || Arrays.asList(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN)
+				.contains(tokenDetails.getStatusCode())) {
+			throw new JwtException("Le jeton est invalide : accès interdit");
+		}
+		
+		try {			
+			OidcUserDetails user = buildOidcUserDetails(accessToken, true);
+			user.setPassword(passwordEncoder.encode(user.getPassword()));
+			oidcUserDetailsService.deleteUser(user.getUsername());
+			oidcUserDetailsService.createUser(user);
+			return user;
+		} catch (JwtException | AuthenticationException e) {
+			throw e;
+		}
+	}
 	
 
 }

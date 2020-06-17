@@ -11,7 +11,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
@@ -25,6 +27,9 @@ public class DaoTokenAuthenticationFilter extends AbstractAuthenticationProcessi
 	
 	@Autowired
 	TokenService tokenService;
+	
+	@Autowired
+	UserDetailsManager oidcUserDetailsService;
 
 
 	public DaoTokenAuthenticationFilter(AuthenticationManager authenticationManager, RequestMatcher requestMatcher) {
@@ -53,13 +58,26 @@ public class DaoTokenAuthenticationFilter extends AbstractAuthenticationProcessi
 				throw new InvalidOidcTokenException(e.getMessage());
 			}
 			if (user != null) {
-				UsernamePasswordAuthenticationToken authRequest = 
-						new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword());
 
-				Authentication authentication = this.getAuthenticationManager().authenticate(authRequest);
-				if (authentication != null && authentication.isAuthenticated()) {						
+				UserDetails registeredUser = null;
+
+				try {
+					registeredUser = oidcUserDetailsService.loadUserByUsername(user.getUsername());
+				} catch (UsernameNotFoundException e) {
+					registeredUser = tokenService.registerUser(bearerToken);
+					Authentication authentication = new UsernamePasswordAuthenticationToken(registeredUser, null,
+							registeredUser.getAuthorities());
 					return authentication;
 				}
+
+				UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(
+						user.getUsername(), user.getPassword());
+
+				Authentication authentication = this.getAuthenticationManager().authenticate(authRequest);
+				if (authentication != null && authentication.isAuthenticated()) {
+					return authentication;
+				}
+
 			} else {
 				throw new UsernameNotFoundException("Impossible d'identifier l'utilisateur à partir du header Authorization");
 			}

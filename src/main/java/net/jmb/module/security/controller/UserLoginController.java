@@ -21,9 +21,9 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import net.jmb.module.security.service.UserLoginService;
+import net.jmb.module.security.service.IdentityProviderService;
+import net.jmb.module.security.service.TokenService;
 import net.jmb.oidc.model.IdentityProviderRegistration;
-import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
 @RequestMapping("/users")
@@ -31,8 +31,9 @@ import springfox.documentation.annotations.ApiIgnore;
 public class UserLoginController {
 	
 	@Autowired
-	private UserLoginService userLoginService;
-	
+	private TokenService tokenService;
+	@Autowired
+	private IdentityProviderService idpService;	
 	@Autowired
 	private UserDetailsManager oidcUserDetailsService;
 	
@@ -41,31 +42,38 @@ public class UserLoginController {
 	@ApiOperation(value = "${UserLoginController.loginInfos}")
 	
 	public Object loginInfos() throws IOException {
-		Map<String, IdentityProviderRegistration> loginInfos = userLoginService.loginInfos();
+		Map<String, IdentityProviderRegistration> loginInfos = idpService.findIdentityProviders();
 		Map<String, Object> result = new HashMap<>();
 		loginInfos.forEach((id, idp) -> {
 			Map<String, String> data = new HashMap<>();
 			data.put("description", idp.getDescription());
+			data.put("iconUrl", idp.getIconUrl());
 			data.put("authorizationPath", "/users/login/" + id);
 			result.put(id, data);
 		});
 		return result;
 	}
 	
+	
 	@RequestMapping(path = "/login/{idp}", method = { RequestMethod.GET })
 	@ApiOperation(value = "${UserLoginController.loginIDP}")
 	
 	public void loginIdp(
 			HttpServletRequest request, HttpServletResponse response,
-			@PathVariable String idp
+			@PathVariable String idp,
+			@RequestParam(required = false, name = "redirect_to") String redirect
 		) throws IOException {
 		
-		String url = (String) userLoginService.idpLoginUrl(idp);		
-		String redirect = ServletUriComponentsBuilder.fromContextPath(request).build().toUriString();
-		redirect = redirect != null ? "?redirect_to=" + redirect + "/users/login/accessToken" : "";
+		String url = (String) idpService.idpLoginUrl(idp);
+		if (redirect == null) {
+			redirect = ServletUriComponentsBuilder.fromContextPath(request).build().toUriString()
+					.concat("/users/login/accessToken");
+		}
+		redirect = "?redirect_to=" + redirect;
 		String authLocation = response.encodeRedirectURL(url + redirect);
 		response.sendRedirect(authLocation);		
 	}
+	
 	
 	@RequestMapping(path = "/logout", method = { RequestMethod.GET })
 	@ApiOperation(value = "${UserLoginController.logout}")
@@ -77,19 +85,24 @@ public class UserLoginController {
 	}
 	
 	
-	@GetMapping(path = "/login/accessToken")
-	@ApiIgnore
+	@GetMapping(path = "/login/registerToken")
 	
-	public Object accessToken(
+	public Object registerToken(
 			@RequestParam("id_token") String idToken
-		) throws IOException {
-		
-		UserDetails user = userLoginService.register(idToken);
+	) throws IOException {
+
 		Map<String, Object> data = new HashMap<>();
-		data.put("id_token", idToken);
-		data.put("user", user);
+		try {
+
+			UserDetails user = tokenService.registerUser(idToken);
+			data.put("id_token", idToken);
+			data.put("user", user);
+		} catch (Exception e) {
+			data.put("error", "Jeton invalide " + e.getMessage());
+		}
 		return data;
 	}
+	
 	
 	@GetMapping(path = "/{id}")
 	@ApiOperation(value = "${UserLoginController.users.getUser}")

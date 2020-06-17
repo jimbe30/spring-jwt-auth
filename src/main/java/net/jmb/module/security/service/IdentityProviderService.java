@@ -18,10 +18,22 @@ import net.jmb.oidc.model.IdentityProviderRegistration;
 @org.springframework.cache.annotation.CacheConfig(cacheNames = CacheConfig.IDP_INFOS_CACHE)
 public class IdentityProviderService {
 	
-	@Autowired 	IdentityProviderService self;	
-	@Autowired	private ModelMapper modelMapper;	
-	@Autowired	private String securityBaseURL;
+	@Autowired 	
+	IdentityProviderService self;	
+	@Autowired	
+	private ModelMapper modelMapper;	
+	@Autowired	
+	private String securityBaseURL;
+	
 	private String redirectParameter;
+
+
+	public String idpLoginUrl(String idp) throws IOException {
+		Map<String, IdentityProviderRegistration> infos = self.findIdentityProviders();
+		IdentityProviderRegistration idpInfos = infos.get(idp);
+		String url = securityBaseURL + idpInfos.getAuthorizationPath();
+		return url;
+	}	
 	
 	@SuppressWarnings("unchecked")	
 	@Cacheable(key = CacheConfig.CACHE_SCOPE)
@@ -43,7 +55,7 @@ public class IdentityProviderService {
 		);
 
 		return result;
-	}
+	}	
 	
 	public IdentityProviderRegistration resolveIdentityProvider(OidcIdToken token) throws IOException {
 		

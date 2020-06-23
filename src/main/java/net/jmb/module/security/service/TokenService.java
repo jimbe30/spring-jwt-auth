@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +19,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 import io.jsonwebtoken.Claims;
@@ -111,9 +114,12 @@ public class TokenService {
 				RoleMapperInterface roleMapper = roleMapperFactory.get(identityProvider.getRegistrationId());
 				List<Role> roles = roleMapper.mapRoles(oidcIdToken);
 
-				result = new OidcUserDetails("-- no token stored --", oidcIdToken.getIssuedAt(), oidcIdToken.getExpiresAt(),
-						oidcIdToken.getClaims()).setUsername(id).setPassword(String.valueOf(accessToken.hashCode()))
-								.setRoles(roles);
+				result = new OidcUserDetails("-- no token stored --", oidcIdToken.getIssuedAt(), 
+						oidcIdToken.getExpiresAt(),	oidcIdToken.getClaims())
+							.setUsername(id)
+							.setPassword(String.valueOf(accessToken.hashCode()))
+							.setIdpRegistration(identityProvider)
+							.setRoles(roles);
 			} catch (Exception e) {
 				throw new JwtException(e.getMessage());
 			}
@@ -125,8 +131,12 @@ public class TokenService {
 		
 		RequestEntity<Void> request = RequestEntity.get(new URI(securityBaseURL + "/token/validate?id_token=" + accessToken)).build();
 		RestTemplate restTemplate = new RestTemplate();
-		ResponseEntity<Object> response = restTemplate.exchange(request, Object.class);
-		
+		ResponseEntity<Object> response ;
+		try {
+			response = restTemplate.exchange(request, Object.class);
+		} catch (HttpClientErrorException.Unauthorized e) {
+			response = new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		}		
 		if (Arrays.asList(HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN).contains(response.getStatusCode())) {
 			throw new BadCredentialsException("Accès non autorisé : le jeton est invalide") ;
 		}

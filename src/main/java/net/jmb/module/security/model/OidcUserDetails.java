@@ -13,6 +13,8 @@ import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import net.jmb.oidc.model.IdentityProviderRegistration;
+
 public class OidcUserDetails extends OidcIdToken implements UserDetails {	
 
 	private static final long serialVersionUID = 1L;
@@ -22,6 +24,7 @@ public class OidcUserDetails extends OidcIdToken implements UserDetails {
 	private List<Role> roles;
 	private long lastAccessTime;
 	private long sessionExpirationDelay;
+	private IdentityProviderRegistration idpRegistration;
 	
 	public OidcUserDetails(String tokenValue, Instant issuedAt, Instant expiresAt, Map<String, Object> claims) {
 		super(tokenValue, issuedAt, expiresAt, claims);
@@ -113,6 +116,15 @@ public class OidcUserDetails extends OidcIdToken implements UserDetails {
 
 	public void setSessionExpirationDelay(long sessionExpirationDelay) {
 		this.sessionExpirationDelay = sessionExpirationDelay;
+	}
+
+	public IdentityProviderRegistration getIdpRegistration() {
+		return idpRegistration;
+	}
+
+	public OidcUserDetails setIdpRegistration(IdentityProviderRegistration idpRegistration) {
+		this.idpRegistration = idpRegistration;
+		return this;
 	}
 
 }

@@ -1,0 +1,11 @@
+login:
+  level:
+    org:
+      springframework:
+        cache: TRACE
+
+net:
+  jmb:
+    security:
+      baseUrl: https://spring-oidc-service.herokuapp.com/
+

@@ -71,6 +71,7 @@ public class UserLoginController {
 		}
 		redirect = "?redirect_to=" + redirect;
 		String authLocation = response.encodeRedirectURL(url + redirect);
+		System.out.println("UserLoginController.loginIdp() - authLocation = " + authLocation);
 		response.sendRedirect(authLocation);		
 	}
 	

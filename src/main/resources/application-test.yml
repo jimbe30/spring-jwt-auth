@@ -7,5 +7,5 @@ login:
 net:
   jmb:
     security:
-      baseUrl: https://spring-oidc-service.herokuapp.com/
+      baseUrl: https://spring-oidc-service.herokuapp.com
 

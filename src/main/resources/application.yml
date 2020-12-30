@@ -14,5 +14,7 @@ net:
       matchers:
         permitAll: /clientApp/**
 
-UserController:
-  login: redirige vers le service d'authentification OIDC
+UserLoginController:
+  loginInfos: publie la liste des fournisseurs d'identité auprès desquels s'authentifier
+  loginIDP: redirige vers le service d'authentification OIDC pour le fournisseur d'identité indiqué
+  registerToken: valide le jeton fourni en paramètre et enregistre l'utilisateur correspondant comme étant authentifié

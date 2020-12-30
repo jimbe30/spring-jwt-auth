@@ -87,7 +87,7 @@ public class UserLoginController {
 	
 	
 	@GetMapping(path = "/login/registerToken")
-	
+	@ApiOperation(value = "${UserLoginController.registerToken}")
 	public Object registerToken(
 			@RequestParam("id_token") String idToken
 	) throws IOException {

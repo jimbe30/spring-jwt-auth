@@ -4,9 +4,6 @@ login:
       springframework:
         cache: TRACE
 
-server:
-   port: 6969
-
 net:
   jmb:
     security:

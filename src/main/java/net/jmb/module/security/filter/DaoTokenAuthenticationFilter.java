@@ -13,11 +13,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
-import io.jsonwebtoken.JwtException;
 import net.jmb.module.security.exception.InvalidOidcTokenException;
 import net.jmb.module.security.model.OidcUserDetails;
 import net.jmb.module.security.service.TokenService;

@@ -18,8 +18,6 @@ import net.jmb.oidc.model.IdentityProviderRegistration;
 @org.springframework.cache.annotation.CacheConfig(cacheNames = CacheConfig.IDP_INFOS_CACHE)
 public class IdentityProviderService {
 	
-	@Autowired 	
-	IdentityProviderService self;	
 	@Autowired	
 	private ModelMapper modelMapper;	
 	@Autowired	
@@ -29,7 +27,7 @@ public class IdentityProviderService {
 
 
 	public String idpLoginUrl(String idp) throws IOException {
-		Map<String, IdentityProviderRegistration> infos = self.findIdentityProviders();
+		Map<String, IdentityProviderRegistration> infos = findIdentityProviders();
 		IdentityProviderRegistration idpInfos = infos.get(idp);
 		String url = securityBaseURL + idpInfos.getAuthorizationPath();
 		return url;
@@ -60,7 +58,7 @@ public class IdentityProviderService {
 	public IdentityProviderRegistration resolveIdentityProvider(OidcIdToken token) throws IOException {
 		
 		String issuer = token.getIssuer().toExternalForm();
-		return self.findIdentityProviders()
+		return findIdentityProviders()
 				.values()
 				.stream()
 				.filter(idpRegistration -> issuer.contains(idpRegistration.getIssuer()))

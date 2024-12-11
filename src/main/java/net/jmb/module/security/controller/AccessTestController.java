@@ -8,13 +8,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.annotations.Api;
-
 @RestController
 @RequestMapping("/tests")
-@Api(tags = "tests")
 public class AccessTestController {
-	
 	
 	@GetMapping(path = "/private")
 	public Object testPrivate(HttpServletRequest request) {

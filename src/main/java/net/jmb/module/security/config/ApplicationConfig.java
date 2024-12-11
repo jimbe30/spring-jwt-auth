@@ -9,17 +9,16 @@ import net.jmb.module.security.model.mapper.RoleMapperFactory;
 
 @Configuration
 @EnableCaching
-public class ApplicationConfig {	
-	
+public class ApplicationConfig {
+
 	@Bean
 	RoleMapperFactory roleMapperFactory() {
 		return new RoleMapperFactory();
 	}
-	
-	@Bean
-	  public ModelMapper modelMapper() {
-	    return new ModelMapper();
-	  }
 
+	@Bean
+	ModelMapper modelMapper() {
+		return new ModelMapper();
+	}
 
 }

@@ -20,15 +20,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import net.jmb.module.security.service.IdentityProviderService;
 import net.jmb.module.security.service.TokenService;
 import net.jmb.oidc.model.IdentityProviderRegistration;
 
 @RestController
 @RequestMapping("/users")
-@Api(tags = "users")
+
 @CrossOrigin
 public class UserLoginController {
 	
@@ -41,8 +39,6 @@ public class UserLoginController {
 	
 	
 	@GetMapping(path = "/login/infos")
-	@ApiOperation(value = "${UserLoginController.loginInfos}")
-	
 	public Object loginInfos() throws IOException {
 		Map<String, IdentityProviderRegistration> loginInfos = idpService.findIdentityProviders();
 		Map<String, Object> result = new HashMap<>();
@@ -58,8 +54,6 @@ public class UserLoginController {
 	
 	
 	@RequestMapping(path = "/login/{idp}", method = { RequestMethod.GET })
-	@ApiOperation(value = "${UserLoginController.loginIDP}")
-	
 	public void loginIdp(
 			HttpServletRequest request, HttpServletResponse response,
 			@PathVariable String idp,
@@ -69,7 +63,7 @@ public class UserLoginController {
 		String url = (String) idpService.idpLoginUrl(idp);
 		if (redirect == null) {
 			redirect = ServletUriComponentsBuilder.fromContextPath(request).build().toUriString()
-					.concat("/users/login/accessToken");
+					.concat("/users/login/registerToken");
 		}
 		redirect = "?redirect_to=" + redirect;
 		String authLocation = response.encodeRedirectURL(url + redirect);
@@ -79,8 +73,6 @@ public class UserLoginController {
 	
 	
 	@RequestMapping(path = "/logout", method = { RequestMethod.GET })
-	@ApiOperation(value = "${UserLoginController.logout}")
-	
 	public void logout(HttpServletRequest request,	HttpServletResponse response)  {
 		/**
 		 * TODO créer un service de logout
@@ -89,10 +81,7 @@ public class UserLoginController {
 	
 	
 	@GetMapping(path = "/login/registerToken")
-	@ApiOperation(value = "${UserLoginController.registerToken}")
-	public Object registerToken(
-			@RequestParam("id_token") String idToken
-	) throws IOException {
+	public Object registerToken(@RequestParam("id_token") String idToken) throws IOException {
 
 		Map<String, Object> data = new HashMap<>();
 		try {
@@ -108,9 +97,7 @@ public class UserLoginController {
 	
 	
 	@GetMapping(path = "/{id}")
-	@ApiOperation(value = "${UserLoginController.users.getUser}")
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
-	
 	public UserDetails getUser(
 			@PathVariable(required = false) String id,
 			@RequestParam(name = "name", required = false) String name

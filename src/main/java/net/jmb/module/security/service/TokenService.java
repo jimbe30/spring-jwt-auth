@@ -3,9 +3,11 @@ package net.jmb.module.security.service;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,15 +18,16 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Header;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.JWTParser;
+
 import net.jmb.module.security.config.CacheConfig;
 import net.jmb.module.security.model.OidcUserDetails;
 import net.jmb.module.security.model.Role;
@@ -45,30 +48,27 @@ public class TokenService {
 	@Autowired
 	PasswordEncoder passwordEncoder;
 	
-	
-	@Autowired	private IdentityProviderService identityProviderService;
-	@Autowired	private RoleMapperFactory roleMapperFactory;
+	@Autowired	
+	private IdentityProviderService identityProviderService;
+	@Autowired	
+	private RoleMapperFactory roleMapperFactory;
 	
 
 	public OidcIdToken resolveToken(String accessToken, boolean checkExpiration) throws JwtException {
-
 		OidcIdToken result = null;
-
-		if (accessToken != null) {
-			
-			long expirationDelay = checkExpiration ? expirationJwtTolerance * 60 : 24 * 3600;			
+		if (accessToken != null) {			
+			long expirationToleranceDelay = checkExpiration ? expirationJwtTolerance * 60 : 24 * 3600;
 			try {
-				String unsignedToken = getUnsignedPart(accessToken);
-				@SuppressWarnings("rawtypes")
-				io.jsonwebtoken.Jwt<Header, Claims> decodedJwt = Jwts.parser()
-						.setAllowedClockSkewSeconds(expirationDelay).parseClaimsJwt(unsignedToken);
-
-				Claims claims = decodedJwt.getBody();
-				Instant issuedAt = Instant.ofEpochMilli(claims.getIssuedAt().getTime());
-				Instant expireAt = Instant.ofEpochMilli(claims.getExpiration().getTime());
-
-				result = new OidcIdToken(accessToken, issuedAt, expireAt, claims);
-			} catch (Exception e) {
+				JWT jwt = JWTParser.parse(accessToken);	
+				JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
+				Map<String, Object> claims = jwtClaimsSet.getClaims();
+				Instant issuedAt = Instant.ofEpochMilli(jwtClaimsSet.getIssueTime().getTime());
+				Instant expireAt = Instant.ofEpochMilli(jwtClaimsSet.getExpirationTime().getTime());
+				if (expireAt.plusSeconds(expirationToleranceDelay).isBefore(Instant.now())) {
+					throw new JwtException("Accès refusé - Jeton expiré");
+				}
+				result = new OidcIdToken(accessToken, issuedAt, expireAt, claims);				
+			} catch (ParseException e) {
 				throw new JwtException(e.getMessage());
 			}
 		}

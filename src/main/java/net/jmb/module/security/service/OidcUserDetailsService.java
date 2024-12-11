@@ -5,28 +5,22 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.provisioning.UserDetailsManager;
-import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import net.jmb.module.security.model.OidcUserDetails;
 
-@Service
+//@Service
 public class OidcUserDetailsService implements UserDetailsManager, Runnable {
-
-	/**
-	 * TODO mettre en place une infrastructure de log
-	 */
 
 	private Integer expirationSessionDelay;
 	
 	protected final Log logger = LogFactory.getLog(getClass());
 	protected final Map<String, OidcUserDetails> users = new ConcurrentHashMap<>();
 	
-	@Autowired
+	
 	public OidcUserDetailsService(Integer expirationSessionDelay) {		
 		this.expirationSessionDelay = expirationSessionDelay;
 		if (expirationSessionDelay != null && expirationSessionDelay > 0) {
